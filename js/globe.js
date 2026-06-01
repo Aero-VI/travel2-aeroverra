@@ -1,24 +1,25 @@
-// Globe View v4.0 - Vector-based dark earth, sharp borders at all zoom levels
-// No blurry satellite texture. All countries rendered as vector polygons.
+// Globe View v5.0 - Dark earth with city lights, lightweight visited-country highlights
+// Uses earth-night.jpg texture (715KB) for sharp dark look
+// Uses countries-110m TopoJSON (108KB) for VISITED country highlights only (not all 195)
 
 let globe = null;
-let countriesGeoJson = null;
-let globeDataCache = { arcs: [], points: [], polygons: [] };
+let topoData = null;
+let globeDataCache = { arcs: [], points: [] };
 let autoRotateTimer = null;
 let globeReady = false;
-let visitedCountrySet = new Set();
+let visitedIso3Set = new Set();
 
 const ROUTE_COLORS = {
-  Flight: 'rgba(192, 132, 252, 0.9)',
-  Cruise: 'rgba(34, 211, 238, 0.9)',
-  Train: 'rgba(251, 191, 36, 0.9)',
-  Bus: 'rgba(74, 222, 128, 0.9)'
+  Flight: 'rgba(192, 132, 252, 0.85)',
+  Cruise: 'rgba(34, 211, 238, 0.85)',
+  Train: 'rgba(251, 191, 36, 0.85)',
+  Bus: 'rgba(74, 222, 128, 0.85)'
 };
 
 const ROUTE_COLORS_DIM = {
-  Flight: 'rgba(192, 132, 252, 0.35)',
-  Cruise: 'rgba(34, 211, 238, 0.35)',
-  Train: 'rgba(251, 191, 36, 0.35)'
+  Flight: 'rgba(192, 132, 252, 0.3)',
+  Cruise: 'rgba(34, 211, 238, 0.3)',
+  Train: 'rgba(251, 191, 36, 0.3)'
 };
 
 const MARKER_COLORS = {
@@ -30,19 +31,19 @@ const MARKER_COLORS = {
 };
 
 const ISO2_TO_ISO3 = {
-  AU:'AUS',BS:'BHS',CA:'CAN',CO:'COL',CR:'CRI',DE:'DEU',DK:'DNK',DO:'DOM',
-  EE:'EST',ES:'ESP',FI:'FIN',FR:'FRA',GB:'GBR',GI:'GIB',GR:'GRC',GU:'GUM',
-  ID:'IDN',IE:'IRL',IS:'ISL',IT:'ITA',JP:'JPN',KR:'KOR',KY:'CYM',LV:'LVA',
-  MX:'MEX',MY:'MYS',NL:'NLD',NO:'NOR',PA:'PAN',PH:'PHL',PL:'POL',PR:'PRI',
-  PT:'PRT',SE:'SWE',SG:'SGP',SX:'SXM',TC:'TCA',TR:'TUR',US:'USA',VI:'VIR',
-  VN:'VNM',HK:'HKG',TW:'TWN',TH:'THA',NZ:'NZL',CN:'CHN',IN:'IND',AE:'ARE',
-  BR:'BRA',AR:'ARG',CL:'CHL',PE:'PER',EC:'ECU',JM:'JAM',HT:'HTI',CU:'CUB',
-  BZ:'BLZ',HN:'HND',GT:'GTM',SV:'SLV',NI:'NIC',BB:'BRB',TT:'TTO',AW:'ABW',
-  CW:'CUW',BM:'BMU',LC:'LCA',AG:'ATG',KN:'KNA',DM:'DMA',GD:'GRD',VC:'VCT',
-  MT:'MLT',CY:'CYP',HR:'HRV',ME:'MNE',AL:'ALB',MK:'MKD',RS:'SRB',BA:'BIH',
-  SI:'SVN',SK:'SVK',CZ:'CZE',HU:'HUN',RO:'ROU',BG:'BGR',LT:'LTU',UA:'UKR',
-  BY:'BLR',MD:'MDA',AT:'AUT',CH:'CHE',BE:'BEL',LU:'LUX',MC:'MCO',LI:'LIE',
-  SM:'SMR',VA:'VAT',AD:'AND',NC:'NCL',VU:'VUT',FJ:'FJI'
+  AU:'036',BS:'044',CA:'124',CO:'170',CR:'188',DE:'276',DK:'208',DO:'214',
+  EE:'233',ES:'724',FI:'246',FR:'250',GB:'826',GI:'292',GR:'300',GU:'316',
+  ID:'360',IE:'372',IS:'352',IT:'380',JP:'392',KR:'410',KY:'136',LV:'428',
+  MX:'484',MY:'458',NL:'528',NO:'578',PA:'591',PH:'608',PL:'616',PR:'630',
+  PT:'620',SE:'752',SG:'702',SX:'534',TC:'796',TR:'792',US:'840',VI:'850',
+  VN:'704',HK:'344',TW:'158',TH:'764',NZ:'554',CN:'156',IN:'356',AE:'784',
+  BR:'076',AR:'032',CL:'152',PE:'604',EC:'218',JM:'388',HT:'332',CU:'192',
+  BZ:'084',HN:'340',GT:'320',SV:'222',NI:'558',BB:'052',TT:'780',AW:'533',
+  CW:'531',BM:'060',LC:'662',AG:'028',KN:'659',DM:'212',GD:'308',VC:'670',
+  MT:'470',CY:'196',HR:'191',ME:'499',AL:'008',MK:'807',RS:'688',BA:'070',
+  SI:'705',SK:'703',CZ:'203',HU:'348',RO:'642',BG:'100',LT:'440',UA:'804',
+  BY:'112',MD:'498',AT:'040',CH:'756',BE:'056',LU:'442',MC:'492',LI:'438',
+  SM:'674',VA:'336',AD:'020',NC:'540',VU:'548',FJ:'242'
 };
 
 var COUNTRY_NAMES_MAP = {
@@ -54,19 +55,30 @@ var COUNTRY_NAMES_MAP = {
   NL:'Netherlands',NO:'Norway',PA:'Panama',PH:'Philippines',PL:'Poland',
   PR:'Puerto Rico',PT:'Portugal',SE:'Sweden',SG:'Singapore',SX:'Sint Maarten',
   TC:'Turks & Caicos',TR:'Turkey',US:'United States',VI:'US Virgin Islands',
-  VN:'Vietnam',HK:'Hong Kong',TW:'Taiwan',NZ:'New Zealand',NC:'New Caledonia',
-  VU:'Vanuatu',BB:'Barbados',AW:'Aruba',CW:'Curacao',TH:'Thailand'
+  VN:'Vietnam',HK:'Hong Kong',TW:'Taiwan',TH:'Thailand',NZ:'New Zealand',
+  NC:'New Caledonia',VU:'Vanuatu',BB:'Barbados',AW:'Aruba',CW:'Curacao'
 };
 function getCountryName(code) {
   return code ? (COUNTRY_NAMES_MAP[code] || code) : '';
 }
 
-function loadCountryBoundaries() {
-  if (countriesGeoJson) return Promise.resolve();
-  return fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson')
-    .then(function(r) { return r.json(); })
-    .then(function(data) { countriesGeoJson = data; })
-    .catch(function(err) { console.warn('Country boundaries unavailable:', err); });
+function loadTopoData() {
+  if (topoData) return Promise.resolve();
+  return Promise.all([
+    fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(function(r) { return r.json(); }),
+    new Promise(function(resolve, reject) {
+      if (window.topojson) { resolve(); return; }
+      var script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/topojson-client@3';
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
+    })
+  ]).then(function(results) {
+    topoData = results[0];
+  }).catch(function(err) {
+    console.warn('TopoJSON load failed:', err);
+  });
 }
 
 function initGlobe() {
@@ -76,14 +88,13 @@ function initGlobe() {
   container.innerHTML = '';
 
   globe = new Globe(container)
-    // No image URL: pure black globe surface
-    .globeImageUrl('')
-    .bumpImageUrl('')
+    .globeImageUrl('//cdn.jsdelivr.net/npm/three-globe/example/img/earth-night.jpg')
+    .bumpImageUrl('//cdn.jsdelivr.net/npm/three-globe/example/img/earth-topology.png')
     .backgroundImageUrl('//unpkg.com/three-globe/example/img/night-sky.png')
     .showAtmosphere(true)
-    .atmosphereColor('#0055aa')
+    .atmosphereColor('#0044aa')
     .atmosphereAltitude(0.12)
-    .showGraticules(true)
+    .showGraticules(false)
     // Arcs
     .arcColor(function(d) { return [d.color, d.colorDim || d.color]; })
     .arcDashLength(function(d) { return d.dashLen || 1; })
@@ -94,7 +105,7 @@ function initGlobe() {
     .arcAltitudeAutoScale(0.35)
     .arcsTransitionDuration(800)
     .arcLabel(function(d) { return buildArcTooltip(d); })
-    // Points (invisible, label carriers)
+    // Points (invisible carriers for labels)
     .pointColor(function() { return 'rgba(0,0,0,0)'; })
     .pointAltitude(0)
     .pointRadius(0.4)
@@ -124,57 +135,23 @@ function initGlobe() {
     .htmlLat('lat')
     .htmlLng('lng')
     .htmlAltitude(0.008)
-    // Polygons: ALL countries rendered (dark for unvisited, highlighted for visited)
-    .polygonCapColor(function(d) {
-      var iso3 = getIso3(d);
-      if (visitedCountrySet.has(iso3)) return 'rgba(34, 211, 238, 0.12)';
-      return 'rgba(20, 30, 45, 0.85)';
-    })
-    .polygonSideColor(function(d) {
-      var iso3 = getIso3(d);
-      if (visitedCountrySet.has(iso3)) return 'rgba(34, 211, 238, 0.08)';
-      return 'rgba(15, 22, 35, 0.6)';
-    })
-    .polygonStrokeColor(function(d) {
-      var iso3 = getIso3(d);
-      if (visitedCountrySet.has(iso3)) return 'rgba(34, 211, 238, 0.6)';
-      return 'rgba(50, 70, 100, 0.35)';
-    })
-    .polygonAltitude(function(d) {
-      var iso3 = getIso3(d);
-      if (visitedCountrySet.has(iso3)) return 0.008;
-      return 0.003;
-    })
+    // Polygons: ONLY visited countries (lightweight)
+    .polygonCapColor(function() { return 'rgba(34, 211, 238, 0.08)'; })
+    .polygonSideColor(function() { return 'rgba(34, 211, 238, 0.04)'; })
+    .polygonStrokeColor(function() { return 'rgba(34, 211, 238, 0.5)'; })
+    .polygonAltitude(0.006)
+    .polygonsTransitionDuration(600)
     .polygonLabel(function(d) {
       var props = d.properties || {};
-      var name = props.ADMIN || props.name || '';
-      var iso3 = getIso3(d);
-      var visited = visitedCountrySet.has(iso3);
+      var name = props.name || '';
       return '<div class="globe-tooltip">' +
-        '<div class="gt-header">' + name + '</div>' +
-        (visited ? '<div class="gt-visits" style="color:#22d3ee">VISITED</div>' : '<div class="gt-meta" style="color:#5a6d82">Not yet visited</div>') +
+        '<div class="gt-header" style="color:#22d3ee">' + name + '</div>' +
+        '<div class="gt-visits" style="color:#22d3ee">VISITED</div>' +
         '</div>';
-    })
-    .polygonsTransitionDuration(600);
+    });
 
   // Camera position
   globe.pointOfView({ lat: 20, lng: -20, altitude: 2.2 }, 0);
-
-  // Style graticules to be subtle
-  setTimeout(function() {
-    var scene = globe.scene();
-    if (scene) {
-      scene.traverse(function(obj) {
-        if (obj.type === 'Line' || obj.type === 'LineSegments') {
-          if (obj.material) {
-            obj.material.color.setHex(0x1a2a40);
-            obj.material.opacity = 0.2;
-            obj.material.transparent = true;
-          }
-        }
-      });
-    }
-  }, 1000);
 
   // Auto-rotate
   startAutoRotate();
@@ -194,11 +171,6 @@ function initGlobe() {
   ro.observe(container);
 
   globeReady = true;
-}
-
-function getIso3(feature) {
-  var props = feature.properties || {};
-  return props.ISO_A3 || props.iso_a3 || '';
 }
 
 function startAutoRotate() {
@@ -258,9 +230,8 @@ function buildPointTooltip(d) {
 
 function clearGlobe() {
   if (!globe) return;
-  globe.arcsData([]).pointsData([]).htmlElementsData([]);
-  // Don't clear polygons here, we manage them separately
-  globeDataCache = { arcs: [], points: [], polygons: [] };
+  globe.arcsData([]).pointsData([]).htmlElementsData([]).polygonsData([]);
+  globeDataCache = { arcs: [], points: [] };
 }
 
 function buildMapData(trips, events, filterShip, filterType) {
@@ -501,16 +472,20 @@ function buildMapData(trips, events, filterShip, filterType) {
     });
   });
 
-  // Build visited ISO3 set for polygon coloring
-  visitedCountrySet = new Set();
+  // Build visited country numeric IDs for polygon filtering
+  visitedIso3Set = new Set();
   visitedCountryCodes.forEach(function(code) {
-    var iso3 = ISO2_TO_ISO3[code];
-    if (iso3) visitedCountrySet.add(iso3);
+    var numId = ISO2_TO_ISO3[code];
+    if (numId) visitedIso3Set.add(numId);
   });
 
-  // Set ALL country polygons (not just visited ones)
-  if (countriesGeoJson && countriesGeoJson.features) {
-    globe.polygonsData(countriesGeoJson.features);
+  // Set ONLY visited country polygons (not all 195)
+  if (topoData && window.topojson) {
+    var allCountries = topojson.feature(topoData, topoData.objects.countries).features;
+    var visitedPolygons = allCountries.filter(function(f) {
+      return visitedIso3Set.has(String(f.id));
+    });
+    globe.polygonsData(visitedPolygons);
   }
 
   // Apply data
@@ -525,8 +500,8 @@ function buildMapData(trips, events, filterShip, filterType) {
 function refreshMap(trips, events, filterShip, filterType) {
   if (!document.getElementById('globe-container')) return;
   initGlobe();
-  if (!countriesGeoJson) {
-    loadCountryBoundaries().then(function() {
+  if (!topoData) {
+    loadTopoData().then(function() {
       buildMapData(trips, events, filterShip, filterType);
     });
   } else {
