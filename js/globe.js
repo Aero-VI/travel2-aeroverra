@@ -10,6 +10,7 @@ const ROUTE_COLORS = {
   Flight: '#c084fc',
   Cruise: '#22d3ee',
   Train: '#fbbf24',
+  Bus: '#4ade80',
   Bus: '#4ade80'
 };
 
@@ -156,13 +157,13 @@ function clearMapLayers() {
   if (!map || !map.isStyleLoaded()) return;
   var layerIds = [
     'flight-glow', 'flight-lines', 'cruise-glow', 'cruise-lines',
-    'train-glow', 'train-lines', 'markers-glow', 'markers-core',
+    'train-glow', 'train-lines', 'bus-glow', 'bus-lines', 'markers-glow', 'markers-core',
     'country-fill', 'country-border'
   ];
   layerIds.forEach(function(id) {
     if (map.getLayer(id)) map.removeLayer(id);
   });
-  var sourceIds = ['flights', 'cruises', 'trains', 'markers', 'visited-countries'];
+  var sourceIds = ['flights', 'cruises', 'trains', 'buses', 'markers', 'visited-countries'];
   sourceIds.forEach(function(id) {
     if (map.getSource(id)) map.removeSource(id);
   });
@@ -194,6 +195,7 @@ function buildMapData(trips, events, filterShip, filterType) {
   var flightFeatures = [];
   var cruiseFeatures = [];
   var trainFeatures = [];
+  var busFeatures = [];
   var markerMap = {};
   var visitedCountryCodes = new Set();
 
@@ -337,6 +339,37 @@ function buildMapData(trips, events, filterShip, filterType) {
           addCountry(tdep.CountryCode); addCountry(tarr.CountryCode);
         }
 
+
+      } else if (seg.SegmentType === 'Bus') {
+        var bdep = seg.Departure || {};
+        var barr = seg.Arrival || {};
+        var bfrom = geocode('Bus', bdep.LocationName||'', bdep.City||'', '');
+        var bto = geocode('Bus', barr.LocationName||'', barr.City||'', '');
+        if (bfrom && bto) {
+          var bLng1 = bfrom[1], bLng2 = bto[1];
+          while (bLng2 - bLng1 > 180) bLng2 -= 360;
+          while (bLng2 - bLng1 < -180) bLng2 += 360;
+          busFeatures.push({
+            type: 'Feature',
+            geometry: { type: 'LineString', coordinates: [[bLng1,bfrom[0]], [bLng2,bto[0]]] },
+            properties: {
+              icon: '\uD83D\uDE8C', operator: seg.Operator || 'Bus',
+              route: seg.Route || '',
+              from: bdep.City || bdep.LocationName || '',
+              to: barr.City || barr.LocationName || '',
+              date: bdep.Time ? new Date(bdep.Time).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '',
+              trip: tripName
+            }
+          });
+          addMarker(bfrom, bdep.City || bdep.LocationName || '', 'Bus',
+            '\uD83D\uDE8C ' + (seg.Operator||'') + ' \u2192 ' + (barr.City||barr.LocationName||''),
+            bdep.CountryCode, tripName, '');
+          addMarker(bto, barr.City || barr.LocationName || '', 'Bus',
+            '\uD83D\uDE8C ' + (seg.Operator||'') + ' \u2190 ' + (bdep.City||bdep.LocationName||''),
+            barr.CountryCode, tripName, '');
+          addCountry(bdep.CountryCode); addCountry(barr.CountryCode);
+        }
+
       } else if (seg.SegmentType === 'Accommodation' && !isHome) {
         var aCoord = geocode('', '', seg.City||'', '');
         if (aCoord) {
@@ -368,6 +401,7 @@ function buildMapData(trips, events, filterShip, filterType) {
     var color = '#58a6ff';
     var size = 4;
     if (loc.types.has('Event')) { color = MARKER_COLORS.Event; size = 4; }
+    if (loc.types.has('Bus')) { color = MARKER_COLORS.Bus; size = 4; }
     if (loc.types.has('Train')) { color = MARKER_COLORS.Train; size = 4; }
     if (loc.types.has('Flight')) { color = MARKER_COLORS.Flight; size = 5; }
     if (loc.types.has('Cruise')) { color = MARKER_COLORS.Cruise; size = 5; }
@@ -408,6 +442,10 @@ function buildMapData(trips, events, filterShip, filterType) {
     type: 'geojson',
     data: { type: 'FeatureCollection', features: trainFeatures }
   });
+  map.addSource('buses', {
+    type: 'geojson',
+    data: { type: 'FeatureCollection', features: busFeatures }
+  });
   map.addSource('markers', {
     type: 'geojson',
     data: { type: 'FeatureCollection', features: markerFeatures }
@@ -443,6 +481,24 @@ function buildMapData(trips, events, filterShip, filterType) {
       'line-color': ROUTE_COLORS.Train,
       'line-width': 2, 'line-opacity': 0.55,
       'line-dasharray': [2, 3]
+    }
+  });
+
+
+  // Bus glow + line
+  map.addLayer({
+    id: 'bus-glow', type: 'line', source: 'buses',
+    paint: {
+      'line-color': ROUTE_COLORS.Bus,
+      'line-width': 5, 'line-opacity': 0.12, 'line-blur': 3
+    }
+  });
+  map.addLayer({
+    id: 'bus-lines', type: 'line', source: 'buses',
+    paint: {
+      'line-color': ROUTE_COLORS.Bus,
+      'line-width': 2, 'line-opacity': 0.55,
+      'line-dasharray': [4, 3]
     }
   });
 
@@ -616,7 +672,7 @@ function setupInteractions() {
   if (!map) return;
 
   // Change cursor on hover
-  ['flight-lines', 'cruise-lines', 'train-lines', 'markers-core'].forEach(function(layerId) {
+  ['flight-lines', 'cruise-lines', 'train-lines', 'bus-lines', 'markers-core'].forEach(function(layerId) {
     map.on('mouseenter', layerId, function() { map.getCanvas().style.cursor = 'pointer'; });
     map.on('mouseleave', layerId, function() { map.getCanvas().style.cursor = ''; });
   });
@@ -651,6 +707,18 @@ function setupInteractions() {
     var p = f.properties;
     mapPopup.setLngLat(e.lngLat).setHTML(
       buildPopupHtml(p.icon, p.operator + (p.trainNum ? ' ' + p.trainNum : ''),
+        p.from + ' \u2192 ' + p.to,
+        (p.date || '') +
+        (p.trip ? '<br><span class="mp-trip-name">' + p.trip + '</span>' : ''))
+    ).addTo(map);
+  });
+
+  // Bus popup
+  map.on('click', 'bus-lines', function(e) {
+    var f = e.features[0];
+    var p = f.properties;
+    mapPopup.setLngLat(e.lngLat).setHTML(
+      buildPopupHtml(p.icon, p.operator + (p.route ? ' ' + p.route : ''),
         p.from + ' \u2192 ' + p.to,
         (p.date || '') +
         (p.trip ? '<br><span class="mp-trip-name">' + p.trip + '</span>' : ''))
