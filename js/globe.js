@@ -318,8 +318,10 @@ function buildMapData(trips, events, filterShip, filterType) {
           storeCruiseItinerary(seg.BookingNumber, shipLabel, itinPorts);
         }
 
+        console.log('[CRUISE]', shipLabel, 'ports:', ports.length, ports.map(function(p){return p.name + ' [' + p.coord[0] + ',' + p.coord[1] + ']';}));
         for (var ci = 0; ci < ports.length - 1; ci++) {
           var cruiseArc = createGeoArc(ports[ci].coord, ports[ci + 1].coord, 40);
+          console.log('[CRUISE ARC]', ports[ci].name, '->', ports[ci+1].name, 'points:', cruiseArc.length);
           cruiseFeatures.push({
             type: 'Feature',
             geometry: { type: 'LineString', coordinates: cruiseArc },
