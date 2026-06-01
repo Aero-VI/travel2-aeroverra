@@ -261,7 +261,7 @@ function buildMapData(trips, events, filterShip, filterType) {
         var depPort = seg.DeparturePort || {};
         var arrPort = seg.ArrivalPort || {};
         var shipLabel = ((seg.CruiseLine||'') + ' ' + (seg.Ship||'')).trim();
-        var cDateStart = depPort.Time ? new Date(depPort.Time).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+        var cDateStart = depPort.Time ? new Date(depPort.Time).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
         var cDateEnd = arrPort.Time ? new Date(arrPort.Time).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
         var cDateRange = cDateStart + (cDateEnd ? ' - ' + cDateEnd : '');
 
@@ -275,7 +275,7 @@ function buildMapData(trips, events, filterShip, filterType) {
 
         (seg.PortsOfCall || []).forEach(function(p) {
           var coord = geocode('Cruise', p.PortName||'', p.City||'', '');
-          var pd = p.Date ? new Date(p.Date).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+          var pd = p.Date ? new Date(p.Date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
           if (coord) {
             ports.push({ coord: coord, name: p.PortName || p.City || '' });
             addMarker(coord, p.City || p.PortName || '', 'Cruise',
