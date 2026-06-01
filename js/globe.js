@@ -130,7 +130,7 @@ function initMap() {
   map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
 
   mapPopup = new maplibregl.Popup({
-    closeButton: false,
+    closeButton: true,
     closeOnClick: true,
     className: 'dark-popup',
     maxWidth: '360px'
