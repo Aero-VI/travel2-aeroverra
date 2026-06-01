@@ -449,6 +449,7 @@ function buildMapData(trips, events, filterShip, filterType) {
     });
   });
 
+  console.log("[MAP SUMMARY] Flights:", flightFeatures.length, "Cruises:", cruiseFeatures.length, "Trains:", trainFeatures.length, "Buses:", busFeatures.length, "Markers:", markerFeatures.length);
   // Add sources and layers
   try {
     map.addSource('flights', {
@@ -475,11 +476,11 @@ function buildMapData(trips, events, filterShip, filterType) {
     // Cruise glow + line
     map.addLayer({
       id: 'cruise-glow', type: 'line', source: 'cruises',
-      paint: { 'line-color': ROUTE_COLORS.Cruise, 'line-width': 6, 'line-opacity': 0.15, 'line-blur': 4 }
+      paint: { 'line-color': ROUTE_COLORS.Cruise, 'line-width': 8, 'line-opacity': 0.25, 'line-blur': 4 }
     });
     map.addLayer({
       id: 'cruise-lines', type: 'line', source: 'cruises',
-      paint: { 'line-color': ROUTE_COLORS.Cruise, 'line-width': 2, 'line-opacity': 0.65 }
+      paint: { 'line-color': ROUTE_COLORS.Cruise, 'line-width': 3, 'line-opacity': 0.85 }
     });
 
     // Train glow + line
