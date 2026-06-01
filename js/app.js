@@ -1,4 +1,4 @@
-// Travel Dashboard v40 - Complete
+// Travel Dashboard v120 - Complete
 // Source of truth: data/trips.json and data/events.json
 // DO NOT modify data files.
 
@@ -941,13 +941,19 @@ function switchView(view) {
     // Show/hide appropriate filter bars
     const mapFilters = document.getElementById('map-filters');
     const tableFilters = document.getElementById('filters');
+    const statsBar = document.getElementById('stats-bar');
+    const body = document.getElementById('app-body');
     if (view === 'globe') {
         mapFilters.style.display = 'flex';
         tableFilters.style.display = 'none';
+        statsBar.style.display = 'none';
+        body.classList.add('globe-active');
         handleMapResize();
     } else {
         mapFilters.style.display = 'none';
         tableFilters.style.display = 'flex';
+        statsBar.style.display = 'flex';
+        body.classList.remove('globe-active');
     }
 
     render();
@@ -967,6 +973,10 @@ async function init() {
         document.getElementById('table-wrapper').innerHTML = '<p class="empty">Failed to load data. Check console.</p>';
         return;
     }
+
+    // Set globe-active on body (default view is globe)
+    document.getElementById('app-body').classList.add('globe-active');
+    document.getElementById('stats-bar').style.display = 'none';
 
     // Populate year filter (table/timeline/gaps)
     const years = [...new Set(tripsData.map(t => getTripYear(t)))].filter(y => y !== 9999).sort((a, b) => b - a);

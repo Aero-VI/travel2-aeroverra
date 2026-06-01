@@ -36,6 +36,20 @@ body {
     overflow-x: hidden;
 }
 
+
+/* App body flex layout - eliminates scrolling on globe view */
+#app-body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+#app-body.globe-active {
+    height: 100vh;
+    overflow: hidden;
+}
+
+
 /* Subtle scanline overlay */
 body::after {
     content: '';
@@ -64,6 +78,7 @@ body::after {
     top: 0;
     z-index: 200;
     flex-wrap: wrap;
+    flex-shrink: 0;
 }
 
 .header-left h1 {
@@ -116,6 +131,7 @@ nav { display: flex; gap: 4px; flex-wrap: wrap; }
     border-bottom: 1px solid var(--border);
     flex-wrap: wrap;
     font-family: var(--mono);
+    flex-shrink: 0;
 }
 
 .stat {
@@ -141,6 +157,7 @@ nav { display: flex; gap: 4px; flex-wrap: wrap; }
     padding: 8px 24px;
     background: var(--surface);
     border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
 }
 
 .filters-bar input, .filters-bar select {
@@ -171,6 +188,7 @@ nav { display: flex; gap: 4px; flex-wrap: wrap; }
     background: var(--surface);
     border-bottom: 1px solid var(--border);
     align-items: center;
+    flex-shrink: 0;
 }
 
 .map-filters-bar select {
@@ -218,11 +236,11 @@ main { position: relative; }
 .empty { color: var(--text-dim); text-align: center; padding: 60px; font-size: 1rem; font-family: var(--mono); }
 
 /* ===== GLOBE VIEW ===== */
-#globe-view { position: relative; }
+#globe-view { position: relative; flex: 1; min-height: 0; overflow: hidden; }
 
 #globe-container {
     width: 100%;
-    height: calc(100vh - 90px);
+    height: 100%;
     background: #000;
     position: relative;
     overflow: hidden;
@@ -696,7 +714,7 @@ tr:hover .issues-btn, .trip-header:hover .issues-btn { opacity: 0.8; }
     .trip-header { padding: 10px 12px; flex-wrap: wrap; }
     .seg-table { font-size: 0.78rem; }
     .seg-table th, .seg-table td { padding: 6px 8px; }
-    #globe-container { height: calc(100vh - 46px); }
+    #globe-container { height: 100%; }
     #globe-legend { bottom: 12px; left: 8px; padding: 8px 12px; font-size: 0.65rem; }
     .timeline-trip { margin-left: 8px; padding-left: 12px; }
     .year-header h2 { font-size: 1.4rem; }
