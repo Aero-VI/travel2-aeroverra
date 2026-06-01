@@ -553,7 +553,8 @@ function buildMapData(trips, events, filterShip, filterType) {
     markerFeatures.forEach(function(f) {
       bounds.extend(f.geometry.coordinates);
     });
-    map.fitBounds(bounds, { padding: 60, maxZoom: 6, duration: 1000 });
+    var maxZ = markerFeatures.length <= 4 ? 12 : (markerFeatures.length <= 10 ? 8 : 6);
+    map.fitBounds(bounds, { padding: 60, maxZoom: maxZ, duration: 1000 });
   }
 
   mapSourcesAdded = true;
