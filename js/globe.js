@@ -10,7 +10,6 @@ const ROUTE_COLORS = {
   Flight: '#c084fc',
   Cruise: '#22d3ee',
   Train: '#fbbf24',
-  Bus: '#4ade80',
   Bus: '#4ade80'
 };
 
@@ -18,6 +17,7 @@ const MARKER_COLORS = {
   Flight: '#c084fc',
   Cruise: '#22d3ee',
   Train: '#fbbf24',
+  Bus: '#4ade80',
   Event: '#34d399',
   Home: '#f87171'
 };
@@ -71,8 +71,6 @@ function createGeoArc(from, to, numPoints) {
     var lat = Math.atan2(z, Math.sqrt(x * x + y * y)) * 180 / Math.PI;
     var lng = Math.atan2(y, x) * 180 / Math.PI;
 
-    // Normalize: prevent >180 degree jumps between consecutive points
-    // This lets longitudes go beyond -180/+180 so MapLibre draws the short path
     if (prevLng !== null) {
       while (lng - prevLng > 180) lng -= 360;
       while (lng - prevLng < -180) lng += 360;
@@ -137,7 +135,6 @@ function initMap() {
     maxWidth: '360px'
   });
 
-  // Set atmosphere/sky once map loads
   map.on('load', function() {
     if (map.setSky) {
       map.setSky({
@@ -157,7 +154,8 @@ function clearMapLayers() {
   if (!map || !map.isStyleLoaded()) return;
   var layerIds = [
     'flight-glow', 'flight-lines', 'cruise-glow', 'cruise-lines',
-    'train-glow', 'train-lines', 'bus-glow', 'bus-lines', 'markers-glow', 'markers-core',
+    'train-glow', 'train-lines', 'bus-glow', 'bus-lines',
+    'markers-glow', 'markers-core',
     'country-fill', 'country-border'
   ];
   layerIds.forEach(function(id) {
@@ -182,7 +180,6 @@ function buildPopupHtml(icon, title, subtitle, extra) {
 function buildMapData(trips, events, filterShip, filterType) {
   if (!map) initMap();
 
-  // Wait for style to be loaded
   if (!map.isStyleLoaded()) {
     map.once('load', function() {
       buildMapData(trips, events, filterShip, filterType);
@@ -314,31 +311,27 @@ function buildMapData(trips, events, filterShip, filterType) {
         var tfrom = geocode('Train', tdep.LocationName||'', tdep.City||'', '');
         var tto = geocode('Train', tarr.LocationName||'', tarr.City||'', '');
         if (tfrom && tto) {
-          var tLng1 = tfrom[1], tLng2 = tto[1];
-          // Normalize train longitude to short path
-          while (tLng2 - tLng1 > 180) tLng2 -= 360;
-          while (tLng2 - tLng1 < -180) tLng2 += 360;
+          var tArc = createGeoArc(tfrom, tto, 30);
+          var tDateStr = tdep.Time ? new Date(tdep.Time).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
           trainFeatures.push({
             type: 'Feature',
-            geometry: { type: 'LineString', coordinates: [[tLng1,tfrom[0]], [tLng2,tto[0]]] },
+            geometry: { type: 'LineString', coordinates: tArc },
             properties: {
               icon: '\uD83D\uDE86', operator: seg.Operator || 'Train',
               trainNum: seg.TrainNumber || '',
               from: tdep.City || tdep.LocationName || '',
               to: tarr.City || tarr.LocationName || '',
-              date: tdep.Time ? new Date(tdep.Time).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '',
-              trip: tripName
+              date: tDateStr, trip: tripName
             }
           });
           addMarker(tfrom, tdep.City || tdep.LocationName || '', 'Train',
             '\uD83D\uDE86 ' + (seg.Operator||'') + ' \u2192 ' + (tarr.City||tarr.LocationName||''),
-            tdep.CountryCode, tripName, '');
+            tdep.CountryCode, tripName, tDateStr);
           addMarker(tto, tarr.City || tarr.LocationName || '', 'Train',
             '\uD83D\uDE86 ' + (seg.Operator||'') + ' \u2190 ' + (tdep.City||tdep.LocationName||''),
-            tarr.CountryCode, tripName, '');
+            tarr.CountryCode, tripName, tDateStr);
           addCountry(tdep.CountryCode); addCountry(tarr.CountryCode);
         }
-
 
       } else if (seg.SegmentType === 'Bus') {
         var bdep = seg.Departure || {};
@@ -346,27 +339,25 @@ function buildMapData(trips, events, filterShip, filterType) {
         var bfrom = geocode('Bus', bdep.LocationName||'', bdep.City||'', '');
         var bto = geocode('Bus', barr.LocationName||'', barr.City||'', '');
         if (bfrom && bto) {
-          var bLng1 = bfrom[1], bLng2 = bto[1];
-          while (bLng2 - bLng1 > 180) bLng2 -= 360;
-          while (bLng2 - bLng1 < -180) bLng2 += 360;
+          var bArc = createGeoArc(bfrom, bto, 20);
+          var bDateStr = bdep.Time ? new Date(bdep.Time).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
           busFeatures.push({
             type: 'Feature',
-            geometry: { type: 'LineString', coordinates: [[bLng1,bfrom[0]], [bLng2,bto[0]]] },
+            geometry: { type: 'LineString', coordinates: bArc },
             properties: {
               icon: '\uD83D\uDE8C', operator: seg.Operator || 'Bus',
               route: seg.Route || '',
               from: bdep.City || bdep.LocationName || '',
               to: barr.City || barr.LocationName || '',
-              date: bdep.Time ? new Date(bdep.Time).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '',
-              trip: tripName
+              date: bDateStr, trip: tripName
             }
           });
           addMarker(bfrom, bdep.City || bdep.LocationName || '', 'Bus',
             '\uD83D\uDE8C ' + (seg.Operator||'') + ' \u2192 ' + (barr.City||barr.LocationName||''),
-            bdep.CountryCode, tripName, '');
+            bdep.CountryCode, tripName, bDateStr);
           addMarker(bto, barr.City || barr.LocationName || '', 'Bus',
             '\uD83D\uDE8C ' + (seg.Operator||'') + ' \u2190 ' + (bdep.City||bdep.LocationName||''),
-            barr.CountryCode, tripName, '');
+            barr.CountryCode, tripName, bDateStr);
           addCountry(bdep.CountryCode); addCountry(barr.CountryCode);
         }
 
@@ -430,121 +421,97 @@ function buildMapData(trips, events, filterShip, filterType) {
   });
 
   // Add sources and layers
-  map.addSource('flights', {
-    type: 'geojson',
-    data: { type: 'FeatureCollection', features: flightFeatures }
-  });
-  map.addSource('cruises', {
-    type: 'geojson',
-    data: { type: 'FeatureCollection', features: cruiseFeatures }
-  });
-  map.addSource('trains', {
-    type: 'geojson',
-    data: { type: 'FeatureCollection', features: trainFeatures }
-  });
-  map.addSource('buses', {
-    type: 'geojson',
-    data: { type: 'FeatureCollection', features: busFeatures }
-  });
-  map.addSource('markers', {
-    type: 'geojson',
-    data: { type: 'FeatureCollection', features: markerFeatures }
-  });
+  try {
+    map.addSource('flights', {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: flightFeatures }
+    });
+    map.addSource('cruises', {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: cruiseFeatures }
+    });
+    map.addSource('trains', {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: trainFeatures }
+    });
+    map.addSource('buses', {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: busFeatures }
+    });
+    map.addSource('markers', {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: markerFeatures }
+    });
 
-  // Cruise glow + line
-  map.addLayer({
-    id: 'cruise-glow', type: 'line', source: 'cruises',
-    paint: {
-      'line-color': ROUTE_COLORS.Cruise,
-      'line-width': 6, 'line-opacity': 0.15, 'line-blur': 4
-    }
-  });
-  map.addLayer({
-    id: 'cruise-lines', type: 'line', source: 'cruises',
-    paint: {
-      'line-color': ROUTE_COLORS.Cruise,
-      'line-width': 2, 'line-opacity': 0.65
-    }
-  });
+    // Cruise glow + line
+    map.addLayer({
+      id: 'cruise-glow', type: 'line', source: 'cruises',
+      paint: { 'line-color': ROUTE_COLORS.Cruise, 'line-width': 6, 'line-opacity': 0.15, 'line-blur': 4 }
+    });
+    map.addLayer({
+      id: 'cruise-lines', type: 'line', source: 'cruises',
+      paint: { 'line-color': ROUTE_COLORS.Cruise, 'line-width': 2, 'line-opacity': 0.65 }
+    });
 
-  // Train glow + line
-  map.addLayer({
-    id: 'train-glow', type: 'line', source: 'trains',
-    paint: {
-      'line-color': ROUTE_COLORS.Train,
-      'line-width': 5, 'line-opacity': 0.12, 'line-blur': 3
-    }
-  });
-  map.addLayer({
-    id: 'train-lines', type: 'line', source: 'trains',
-    paint: {
-      'line-color': ROUTE_COLORS.Train,
-      'line-width': 2, 'line-opacity': 0.55,
-      'line-dasharray': [2, 3]
-    }
-  });
+    // Train glow + line
+    map.addLayer({
+      id: 'train-glow', type: 'line', source: 'trains',
+      paint: { 'line-color': ROUTE_COLORS.Train, 'line-width': 5, 'line-opacity': 0.12, 'line-blur': 3 }
+    });
+    map.addLayer({
+      id: 'train-lines', type: 'line', source: 'trains',
+      paint: { 'line-color': ROUTE_COLORS.Train, 'line-width': 2, 'line-opacity': 0.55, 'line-dasharray': [2, 3] }
+    });
 
+    // Bus glow + line
+    map.addLayer({
+      id: 'bus-glow', type: 'line', source: 'buses',
+      paint: { 'line-color': ROUTE_COLORS.Bus, 'line-width': 5, 'line-opacity': 0.12, 'line-blur': 3 }
+    });
+    map.addLayer({
+      id: 'bus-lines', type: 'line', source: 'buses',
+      paint: { 'line-color': ROUTE_COLORS.Bus, 'line-width': 2, 'line-opacity': 0.55, 'line-dasharray': [4, 3] }
+    });
 
-  // Bus glow + line
-  map.addLayer({
-    id: 'bus-glow', type: 'line', source: 'buses',
-    paint: {
-      'line-color': ROUTE_COLORS.Bus,
-      'line-width': 5, 'line-opacity': 0.12, 'line-blur': 3
-    }
-  });
-  map.addLayer({
-    id: 'bus-lines', type: 'line', source: 'buses',
-    paint: {
-      'line-color': ROUTE_COLORS.Bus,
-      'line-width': 2, 'line-opacity': 0.55,
-      'line-dasharray': [4, 3]
-    }
-  });
+    // Flight glow + line
+    map.addLayer({
+      id: 'flight-glow', type: 'line', source: 'flights',
+      paint: { 'line-color': ROUTE_COLORS.Flight, 'line-width': 5, 'line-opacity': 0.12, 'line-blur': 3 }
+    });
+    map.addLayer({
+      id: 'flight-lines', type: 'line', source: 'flights',
+      paint: { 'line-color': ROUTE_COLORS.Flight, 'line-width': 1.5, 'line-opacity': 0.55, 'line-dasharray': [6, 4] }
+    });
 
-  // Flight glow + line
-  map.addLayer({
-    id: 'flight-glow', type: 'line', source: 'flights',
-    paint: {
-      'line-color': ROUTE_COLORS.Flight,
-      'line-width': 5, 'line-opacity': 0.12, 'line-blur': 3
-    }
-  });
-  map.addLayer({
-    id: 'flight-lines', type: 'line', source: 'flights',
-    paint: {
-      'line-color': ROUTE_COLORS.Flight,
-      'line-width': 1.5, 'line-opacity': 0.55,
-      'line-dasharray': [6, 4]
-    }
-  });
+    // Marker glow + core
+    map.addLayer({
+      id: 'markers-glow', type: 'circle', source: 'markers',
+      paint: {
+        'circle-radius': ['*', ['get', 'size'], 2.5],
+        'circle-color': ['get', 'color'],
+        'circle-opacity': 0.12,
+        'circle-blur': 0.8
+      }
+    });
+    map.addLayer({
+      id: 'markers-core', type: 'circle', source: 'markers',
+      paint: {
+        'circle-radius': ['get', 'size'],
+        'circle-color': ['get', 'color'],
+        'circle-opacity': 0.9,
+        'circle-stroke-color': '#ffffff',
+        'circle-stroke-width': 0.5,
+        'circle-stroke-opacity': 0.35
+      }
+    });
+  } catch (e) {
+    console.error('Error adding map layers:', e);
+  }
 
-  // Marker glow + core
-  map.addLayer({
-    id: 'markers-glow', type: 'circle', source: 'markers',
-    paint: {
-      'circle-radius': ['*', ['get', 'size'], 2.5],
-      'circle-color': ['get', 'color'],
-      'circle-opacity': 0.12,
-      'circle-blur': 0.8
-    }
-  });
-  map.addLayer({
-    id: 'markers-core', type: 'circle', source: 'markers',
-    paint: {
-      'circle-radius': ['get', 'size'],
-      'circle-color': ['get', 'color'],
-      'circle-opacity': 0.9,
-      'circle-stroke-color': '#ffffff',
-      'circle-stroke-width': 0.5,
-      'circle-stroke-opacity': 0.35
-    }
-  });
-
-  // Country highlight via countries.geojson (lightweight)
+  // Country highlights (async, non-blocking)
   loadCountryHighlights(visitedCountryCodes);
 
-  // Interactive popups for routes and markers
+  // Interactive popups
   setupInteractions();
 
   // Fit bounds to markers
@@ -570,29 +537,14 @@ function loadCountryHighlights(visitedCodes) {
     if (iso3) iso3Set.add(iso3);
   });
 
-  // Use a lightweight TopoJSON source
-  fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
-    .then(function(r) { return r.json(); })
-    .then(function(topology) {
-      // Convert TopoJSON to GeoJSON, filter to visited only
-      var countries = topojsonFeature(topology, topology.objects.countries);
-      // countries-110m uses numeric IDs, we need a mapping
-      // Use the simpler approach: load GeoJSON directly
-      return fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json');
+  // Use lightweight GeoJSON with ISO_A3 properties
+  fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson')
+    .then(function(r) {
+      if (!r.ok) throw new Error('Failed to fetch countries');
+      return r.json();
     })
-    .catch(function() {
-      // Fallback: try direct GeoJSON
-      return fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson');
-    })
-    .then(function(r) { return r.json(); })
     .then(function(data) {
-      var features;
-      if (data.type === 'Topology') {
-        features = topojsonFeature(data, data.objects.countries).features;
-      } else {
-        features = data.features || [];
-      }
-
+      var features = data.features || [];
       var visited = features.filter(function(f) {
         var props = f.properties || {};
         var iso3 = props.ISO_A3 || props.iso_a3 || '';
@@ -600,7 +552,7 @@ function loadCountryHighlights(visitedCodes) {
       });
 
       if (visited.length === 0) return;
-
+      if (!map || !map.isStyleLoaded()) return;
       if (map.getSource('visited-countries')) return;
 
       map.addSource('visited-countries', {
@@ -608,8 +560,8 @@ function loadCountryHighlights(visitedCodes) {
         data: { type: 'FeatureCollection', features: visited }
       });
 
-      // Insert country layers below route layers
-      var beforeLayer = 'cruise-glow';
+      // Insert country layers below route layers if possible
+      var beforeLayer = map.getLayer('cruise-glow') ? 'cruise-glow' : undefined;
       map.addLayer({
         id: 'country-fill', type: 'fill', source: 'visited-countries',
         paint: { 'fill-color': '#22d3ee', 'fill-opacity': 0.06 }
@@ -622,57 +574,9 @@ function loadCountryHighlights(visitedCodes) {
     .catch(function(err) { console.warn('Country highlights failed:', err); });
 }
 
-// Simple TopoJSON to GeoJSON converter (for countries-110m)
-function topojsonFeature(topology, object) {
-  if (!topology || !object) return { type: 'FeatureCollection', features: [] };
-  var arcs = topology.arcs;
-  var transform = topology.transform;
-  var features = (object.geometries || []).map(function(geom) {
-    return { type: 'Feature', properties: geom.properties || { id: geom.id }, geometry: decodeGeometry(geom, arcs, transform) };
-  });
-  return { type: 'FeatureCollection', features: features };
-}
-
-function decodeGeometry(geom, arcs, transform) {
-  if (geom.type === 'Polygon') {
-    return { type: 'Polygon', coordinates: geom.arcs.map(function(ring) { return decodeRing(ring, arcs, transform); }) };
-  } else if (geom.type === 'MultiPolygon') {
-    return { type: 'MultiPolygon', coordinates: geom.arcs.map(function(poly) {
-      return poly.map(function(ring) { return decodeRing(ring, arcs, transform); });
-    }) };
-  }
-  return null;
-}
-
-function decodeRing(indices, arcs, transform) {
-  var coords = [];
-  indices.forEach(function(idx) {
-    var reverse = idx < 0;
-    var arc = arcs[reverse ? ~idx : idx];
-    var decoded = decodeArc(arc, transform);
-    if (reverse) decoded = decoded.slice().reverse();
-    if (coords.length > 0) decoded = decoded.slice(1);
-    coords = coords.concat(decoded);
-  });
-  return coords;
-}
-
-function decodeArc(arc, transform) {
-  var x = 0, y = 0;
-  var sx = transform ? transform.scale[0] : 1;
-  var sy = transform ? transform.scale[1] : 1;
-  var tx = transform ? transform.translate[0] : 0;
-  var ty = transform ? transform.translate[1] : 0;
-  return arc.map(function(p) {
-    x += p[0]; y += p[1];
-    return [x * sx + tx, y * sy + ty];
-  });
-}
-
 function setupInteractions() {
   if (!map) return;
 
-  // Change cursor on hover
   ['flight-lines', 'cruise-lines', 'train-lines', 'bus-lines', 'markers-core'].forEach(function(layerId) {
     map.on('mouseenter', layerId, function() { map.getCanvas().style.cursor = 'pointer'; });
     map.on('mouseleave', layerId, function() { map.getCanvas().style.cursor = ''; });
@@ -734,7 +638,10 @@ function setupInteractions() {
     html += '<div class="mp-title">' + p.label + '</div>';
 
     if (p.countries) {
-      var cnames = p.countries.split(',').map(function(c) { return countryName(c); }).filter(Boolean);
+      var cnames = p.countries.split(',').map(function(c) {
+        // countryName is defined in app.js, loaded before this runs
+        return typeof countryName === 'function' ? countryName(c) : c;
+      }).filter(Boolean);
       if (cnames.length) html += '<div class="mp-country">' + cnames.join(', ') + '</div>';
     }
 

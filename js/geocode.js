@@ -181,7 +181,7 @@ function geocode(type, name, city, code) {
     if (GEOCODE.ports[city]) return GEOCODE.ports[city];
   }
   if (type === 'Bus') {
-    if (GEOCODE.busStations[locName]) return GEOCODE.busStations[locName];
+    if (GEOCODE.busStations[name]) return GEOCODE.busStations[name];
     if (GEOCODE.busStations[city]) return GEOCODE.busStations[city];
   }
   if (type === 'Train') {
