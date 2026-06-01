@@ -555,34 +555,49 @@ function findWhereOnDate(dateStr) {
             }
         }
 
-        // Check if date falls within trip date range but between segments (gap day)
+        // Check if date falls within trip date range but between segments
         const range = getTripDateRange(trip);
         if (range.start && range.end) {
             const tripStart = new Date(range.start).getTime();
             const tripEnd = new Date(range.end).getTime();
             if (targetMs >= tripStart && targetMs <= tripEnd && !result) {
-                // We're in the trip range but between segments - find nearest segment
-                let nearestSeg = null;
-                let nearestDist = Infinity;
+                // Find the most recent past segment and next upcoming segment
+                let prevSeg = null, nextSeg = null;
+                let prevDist = Infinity, nextDist = Infinity;
                 for (const seg of segs) {
                     const end = getSegEnd(seg);
+                    const start = getSegStart(seg);
                     if (end) {
                         const dist = targetMs - new Date(end).getTime();
-                        if (dist >= 0 && dist < nearestDist) {
-                            nearestDist = dist;
-                            nearestSeg = seg;
-                        }
+                        if (dist >= 0 && dist < prevDist) { prevDist = dist; prevSeg = seg; }
+                    }
+                    if (start) {
+                        const dist = new Date(start).getTime() - targetMs;
+                        if (dist >= 0 && dist < nextDist) { nextDist = dist; nextSeg = seg; }
                     }
                 }
-                if (nearestSeg) {
+                // Prefer next segment's departure city (where you are waiting to depart from)
+                // Fall back to previous segment's arrival city
+                let loc = null, cc = null, city = null;
+                if (nextSeg) {
+                    loc = getSegFrom(nextSeg);
+                    cc = getSegFromCountry(nextSeg);
+                    city = loc;
+                }
+                if (!loc && prevSeg) {
+                    loc = getSegTo(prevSeg);
+                    cc = getSegToCountry(prevSeg);
+                    city = loc;
+                }
+                if (loc) {
                     result = {
                         trip: trip.TripName,
-                        segment: nearestSeg,
-                        location: getSegTo(nearestSeg) + (getSegToCountry(nearestSeg) ? ', ' + countryName(getSegToCountry(nearestSeg)) : ''),
-                        detail: 'Between segments (likely in ' + getSegTo(nearestSeg) + ')',
-                        type: 'Gap Day',
-                        countryCode: getSegToCountry(nearestSeg),
-                        portName: getSegTo(nearestSeg)
+                        segment: prevSeg || nextSeg,
+                        location: loc + (cc ? ', ' + countryName(cc) : ''),
+                        detail: 'Staying in ' + loc,
+                        type: 'Location',
+                        countryCode: cc,
+                        portName: city
                     };
                 }
             }
@@ -685,18 +700,21 @@ function getAllVisitedCountries() {
 function getCountryDetails() {
     const countryData = {};
 
+    // Build a chronological list of all country touches across all trips
+    const countryTimeline = []; // [{code, city, date, tripName}]
+
     for (const trip of tripsData) {
         if (isHomeTrip(trip)) continue;
-        const range = getTripDateRange(trip);
 
         for (const seg of trip.Segments || []) {
-            const processCountry = (code, city, date) => {
+            const addTouch = (code, city, date) => {
                 if (!code) return;
+                countryTimeline.push({ code, city, date, tripName: trip.TripName });
+                // Initialize country data
                 if (!countryData[code]) {
                     countryData[code] = { code, visits: 0, firstVisit: null, lastVisit: null, cities: new Set(), trips: new Set(), totalDays: 0 };
                 }
                 const cd = countryData[code];
-                cd.visits++;
                 if (city) cd.cities.add(city);
                 cd.trips.add(trip.TripName);
                 if (date) {
@@ -706,32 +724,49 @@ function getCountryDetails() {
                 }
             };
 
-            const segStart = getSegStart(seg);
-
             if (seg.SegmentType === 'Cruise') {
                 const dep = seg.DeparturePort || {};
                 const arr = seg.ArrivalPort || {};
-                processCountry(dep.CountryCode, dep.City, dep.Time);
-                processCountry(arr.CountryCode, arr.City, arr.Time);
-                (seg.PortsOfCall || []).forEach(p => processCountry(p.CountryCode, p.City || p.PortName, p.Date));
+                addTouch(dep.CountryCode, dep.City, dep.Time);
+                (seg.PortsOfCall || []).forEach(p => addTouch(p.CountryCode, p.City || p.PortName, p.Date));
+                addTouch(arr.CountryCode, arr.City, arr.Time);
             } else if (seg.SegmentType === 'Flight') {
                 const dep = seg.Departure || {};
                 const arr = seg.Arrival || {};
-                processCountry(dep.CountryCode, dep.City, dep.Time);
-                processCountry(arr.CountryCode, arr.City, arr.Time);
+                addTouch(dep.CountryCode, dep.City, dep.Time);
+                addTouch(arr.CountryCode, arr.City, arr.Time);
             } else if (seg.SegmentType === 'Train' || seg.SegmentType === 'Bus') {
                 const dep = seg.Departure || {};
                 const arr = seg.Arrival || {};
-                processCountry(dep.CountryCode, dep.City || dep.LocationName, dep.Time);
-                processCountry(arr.CountryCode, arr.City || arr.LocationName, arr.Time);
+                addTouch(dep.CountryCode, dep.City || dep.LocationName, dep.Time);
+                addTouch(arr.CountryCode, arr.City || arr.LocationName, arr.Time);
             } else if (seg.SegmentType === 'Accommodation') {
-                processCountry(seg.CountryCode, seg.City, seg.CheckInDate);
-                // Estimate days
+                addTouch(seg.CountryCode, seg.City, seg.CheckInDate);
                 if (seg.CheckInDate && seg.CheckOutDate) {
                     const days = daysBetween(seg.CheckInDate, seg.CheckOutDate);
                     if (countryData[seg.CountryCode]) countryData[seg.CountryCode].totalDays += days;
                 }
             }
+        }
+    }
+
+    // Sort timeline chronologically
+    countryTimeline.sort((a, b) => {
+        const da = a.date ? new Date(a.date).getTime() : 0;
+        const db = b.date ? new Date(b.date).getTime() : 0;
+        return da - db;
+    });
+
+    // Count visits: a new visit = touching a country after having been in a different country
+    // Consecutive touches of the same country (even different cities) = same visit
+    let lastCountry = null;
+    for (const touch of countryTimeline) {
+        if (touch.code !== lastCountry) {
+            // Entered a new country (or re-entered after leaving)
+            if (countryData[touch.code]) {
+                countryData[touch.code].visits++;
+            }
+            lastCountry = touch.code;
         }
     }
 
