@@ -726,3 +726,102 @@ tr:hover .issues-btn, .trip-header:hover .issues-btn { opacity: 0.8; }
 
 /* Trip sidebar (legacy) */
 #trip-sidebar { display: none; }
+
+/* ===== GLOBE TOOLTIPS ===== */
+.globe-tooltip {
+    background: rgba(13, 17, 23, 0.95);
+    border: 1px solid rgba(0, 229, 255, 0.2);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #e6edf3;
+    max-width: 320px;
+    backdrop-filter: blur(16px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 12px rgba(0, 229, 255, 0.1);
+}
+.gt-header {
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 4px;
+    letter-spacing: -0.3px;
+}
+.gt-route {
+    color: #8b949e;
+    margin-bottom: 4px;
+}
+.gt-meta {
+    color: #6e7681;
+    font-size: 11px;
+}
+.gt-country {
+    color: #8b949e;
+    margin-bottom: 4px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.gt-visits {
+    color: #00e5ff;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+.gt-badges {
+    margin-bottom: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+.gt-section {
+    border-top: 1px solid rgba(255,255,255,0.06);
+    margin-top: 6px;
+    padding-top: 6px;
+}
+.gt-section-title {
+    color: #484f58;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 3px;
+}
+.gt-trip {
+    color: #8b949e;
+    font-size: 11px;
+    padding: 1px 0;
+}
+.gt-detail {
+    color: #8b949e;
+    font-size: 11px;
+    padding: 1px 0;
+}
+.gt-more {
+    color: #484f58;
+    font-size: 11px;
+    font-style: italic;
+}
+
+/* Globe marker base (set in JS, this is fallback) */
+.globe-marker {
+    position: relative;
+}
+
+/* Map filters bar for mobile */
+@media (max-width: 768px) {
+    .map-filters-bar {
+        display: flex !important;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        gap: 6px;
+        padding: 8px 12px;
+        scrollbar-width: none;
+    }
+    .map-filters-bar::-webkit-scrollbar { display: none; }
+    .map-filters-bar select,
+    .map-filters-bar button {
+        min-width: 120px;
+        flex-shrink: 0;
+        font-size: 0.75rem;
+        padding: 6px 10px;
+    }
+}
