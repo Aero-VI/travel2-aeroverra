@@ -59,6 +59,7 @@ function createGeoArc(from, to, numPoints) {
     return coords;
   }
 
+  var prevLng = null;
   for (var i = 0; i <= numPoints; i++) {
     var f = i / numPoints;
     var A = Math.sin((1 - f) * d) / Math.sin(d);
@@ -68,6 +69,14 @@ function createGeoArc(from, to, numPoints) {
     var z = A * Math.sin(lat1) + B * Math.sin(lat2);
     var lat = Math.atan2(z, Math.sqrt(x * x + y * y)) * 180 / Math.PI;
     var lng = Math.atan2(y, x) * 180 / Math.PI;
+
+    // Normalize: prevent >180 degree jumps between consecutive points
+    // This lets longitudes go beyond -180/+180 so MapLibre draws the short path
+    if (prevLng !== null) {
+      while (lng - prevLng > 180) lng -= 360;
+      while (lng - prevLng < -180) lng += 360;
+    }
+    prevLng = lng;
     coords.push([lng, lat]);
   }
   return coords;
@@ -303,9 +312,13 @@ function buildMapData(trips, events, filterShip, filterType) {
         var tfrom = geocode('Train', tdep.LocationName||'', tdep.City||'', '');
         var tto = geocode('Train', tarr.LocationName||'', tarr.City||'', '');
         if (tfrom && tto) {
+          var tLng1 = tfrom[1], tLng2 = tto[1];
+          // Normalize train longitude to short path
+          while (tLng2 - tLng1 > 180) tLng2 -= 360;
+          while (tLng2 - tLng1 < -180) tLng2 += 360;
           trainFeatures.push({
             type: 'Feature',
-            geometry: { type: 'LineString', coordinates: [[tfrom[1],tfrom[0]], [tto[1],tto[0]]] },
+            geometry: { type: 'LineString', coordinates: [[tLng1,tfrom[0]], [tLng2,tto[0]]] },
             properties: {
               icon: '\uD83D\uDE86', operator: seg.Operator || 'Train',
               trainNum: seg.TrainNumber || '',
