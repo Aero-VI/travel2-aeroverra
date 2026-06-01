@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>Nicholas's Travel Map</title>
     <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.0.0/dist/maplibre-gl.css">
-    <link rel="stylesheet" href="css/style.css?v=110">
+    <link rel="stylesheet" href="css/style.css?v=111">
 </head>
 <body>
     <header id="main-header">
@@ -40,6 +40,7 @@
             <option value="Cruise">&#x1F6A2; Cruises</option>
             <option value="Flight">&#x2708;&#xFE0F; Flights</option>
             <option value="Train">&#x1F686; Trains</option>
+            <option value="Bus">&#x1F68C; Buses</option>
         </select>
         <button id="map-filter-reset" class="map-reset-btn" title="Reset all filters">&#x21BA; Reset</button>
     </div>
@@ -65,6 +66,19 @@
     <div id="globe-view" class="view active">
         <div id="globe-container"></div>
         <div id="map-hud"><div id="hud-stats"></div></div>
+        <div id="globe-legend">
+            <div class="legend-title">Routes</div>
+            <div class="legend-item"><span class="legend-line-sample cruise-line"></span> Cruise</div>
+            <div class="legend-item"><span class="legend-line-sample flight-line"></span> Flight</div>
+            <div class="legend-item"><span class="legend-line-sample train-line"></span> Train</div>
+            <div class="legend-item"><span class="legend-line-sample bus-line"></span> Bus</div>
+            <div class="legend-title" style="margin-top:10px">Markers</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#22d3ee;color:#22d3ee"></span> Cruise Port</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#c084fc;color:#c084fc"></span> Airport</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#fbbf24;color:#fbbf24"></span> Train Station</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#34d399;color:#34d399"></span> Event</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#f87171;color:#f87171"></span> Home</div>
+        </div>
     </div>
 
     <div id="table-view" class="view">
@@ -80,8 +94,8 @@
     </div>
 
     <script src="https://unpkg.com/maplibre-gl@5.0.0/dist/maplibre-gl.js"></script>
-    <script src="js/geocode.js?v=110"></script>
-    <script src="js/globe.js?v=110"></script>
-    <script src="js/app.js?v=110"></script>
+    <script src="js/geocode.js?v=111"></script>
+    <script src="js/globe.js?v=111"></script>
+    <script src="js/app.js?v=111"></script>
 </body>
 </html>
