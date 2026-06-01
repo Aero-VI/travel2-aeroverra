@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>Nicholas's Travel Map</title>
-    <link rel="stylesheet" href="css/style.css?v=80">
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.0.0/dist/maplibre-gl.css">
+    <link rel="stylesheet" href="css/style.css?v=100">
 </head>
 <body>
     <header id="main-header">
@@ -48,46 +49,39 @@
         <select id="year-filter"><option value="all">All Years</option></select>
         <select id="type-filter">
             <option value="all">All Types</option>
-            <option value="Cruise">Cruise</option>
-            <option value="Flight">Flight</option>
-            <option value="Train">Train</option>
-            <option value="Bus">Bus</option>
-            <option value="Accommodation">Accommodation</option>
+            <option value="Cruise">&#x1F6A2; Cruises</option>
+            <option value="Flight">&#x2708;&#xFE0F; Flights</option>
+            <option value="Train">&#x1F686; Trains</option>
+            <option value="Accommodation">&#x1F3E8; Hotels</option>
         </select>
         <select id="source-filter">
             <option value="all">All Sources</option>
-            <option value="email">Email</option>
-            <option value="inferred">Inferred</option>
+            <option value="tripit">TripIt</option>
             <option value="manual">Manual</option>
         </select>
     </div>
 
-    <main>
-        <div id="globe-view" class="view active">
-            <div id="globe-container"></div>
-            <div id="map-hud">
-                <div id="hud-stats"></div>
-            </div>
-            <div id="globe-legend">
-                <div class="legend-title">ROUTES</div>
-                <div class="legend-item"><span class="legend-line-sample cruise-line"></span> Cruise</div>
-                <div class="legend-item"><span class="legend-line-sample flight-line"></span> Flight</div>
-                <div class="legend-item"><span class="legend-line-sample train-line"></span> Train</div>
-                <div class="legend-title" style="margin-top:8px">MARKERS</div>
-                <div class="legend-item"><span class="legend-dot" style="background:#22d3ee;box-shadow:0 0 6px #22d3ee"></span> Cruise Port</div>
-                <div class="legend-item"><span class="legend-dot" style="background:#c084fc;box-shadow:0 0 6px #c084fc"></span> Airport</div>
-                <div class="legend-item"><span class="legend-dot" style="background:#fbbf24;box-shadow:0 0 6px #fbbf24"></span> Train Station</div>
-                <div class="legend-item"><span class="legend-dot" style="background:#34d399;box-shadow:0 0 6px #34d399"></span> Event</div>
-            </div>
-        </div>
-        <div id="table-view" class="view"><div id="table-wrapper"></div></div>
-        <div id="timeline-view" class="view"><div id="timeline-container"></div></div>
-        <div id="gaps-view" class="view"><div id="gaps-container"></div></div>
-    </main>
+    <div id="hud-stats" class="hud-stats"></div>
 
-    <script src="//cdn.jsdelivr.net/npm/globe.gl"></script>
-    <script src="js/geocode.js?v=80"></script>
-    <script src="js/globe.js?v=80"></script>
-    <script src="js/app.js?v=80"></script>
+    <div id="globe-view" class="view active">
+        <div id="globe-container"></div>
+    </div>
+
+    <div id="table-view" class="view">
+        <div id="table-wrapper"></div>
+    </div>
+
+    <div id="timeline-view" class="view">
+        <div id="timeline-wrapper"></div>
+    </div>
+
+    <div id="gaps-view" class="view">
+        <div id="gaps-wrapper"></div>
+    </div>
+
+    <script src="https://unpkg.com/maplibre-gl@5.0.0/dist/maplibre-gl.js"></script>
+    <script src="js/geocode.js?v=100"></script>
+    <script src="js/globe.js?v=100"></script>
+    <script src="js/app.js?v=100"></script>
 </body>
 </html>
