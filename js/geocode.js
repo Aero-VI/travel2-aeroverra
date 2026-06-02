@@ -6,7 +6,11 @@ const GEOCODE = {
     'New Chitose Airport':[42.7752,141.6925],
     'Hilton Niseko Village':[42.8604,140.6889],
     'Chitose':[42.7752,141.6925],
-    'Niseko':[42.8604,140.6889]
+    'Niseko':[42.8604,140.6889],
+    'Concord Coach Lines Terminal':[43.2081,-71.5376],
+    'Concord':[43.2081,-71.5376],
+    'Boston Logan Airport Terminal A':[42.3656,-71.0096],
+    'Boston':[42.3656,-71.0096]
   },
   airports: {
     AMS:[52.3086,4.7639],ATL:[33.6407,-84.4277],AXT:[39.6156,140.2186],
