@@ -233,7 +233,8 @@ const GEOCODE = {
     'Round Rock':[30.5083,-97.6789],
     'Semboku':[39.5922,140.5031],
     'Shannon':[52.703,-8.8641],
-    'Steamboat Springs':[40.485,-106.8317]
+    'Steamboat Springs':[40.485,-106.8317],
+    'Dania Beach':[26.0524,-80.1437]
   }
 };
 
