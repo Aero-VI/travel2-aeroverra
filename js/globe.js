@@ -559,38 +559,44 @@ function buildMapData(trips, events, filterShip, filterType) {
 }
 
 function loadCountryHighlights(visitedCodes) {
-  if (!map || visitedCodes.size === 0) return;
+  console.log('[Country Highlights] Called with', visitedCodes.size, 'codes:', Array.from(visitedCodes));
+  if (!map || visitedCodes.size === 0) {
+    console.warn('[Country Highlights] Skipped: map=' + !!map + ', codes=' + visitedCodes.size);
+    return;
+  }
 
   var iso3Set = new Set();
   visitedCodes.forEach(function(code) {
     var iso3 = ISO2_TO_ISO3[code];
     if (iso3) iso3Set.add(iso3);
   });
+  console.log('[Country Highlights] ISO3 set:', Array.from(iso3Set));
 
-  // Use Natural Earth 110m GeoJSON (~800KB, has iso_a3 property)
   fetch('https://d2ad6b4ur7yvpq.cloudfront.net/naturalearth-3.3.0/ne_110m_admin_0_countries.geojson')
     .then(function(r) {
-      if (!r.ok) throw new Error('Failed to fetch countries');
+      if (!r.ok) throw new Error('Failed to fetch countries: ' + r.status);
       return r.json();
     })
     .then(function(data) {
       var features = data.features || [];
+      console.log('[Country Highlights] NE features loaded:', features.length);
       var visited = features.filter(function(f) {
         var props = f.properties || {};
         var iso3 = props.iso_a3 || props.ISO_A3 || props.adm0_a3 || '';
         return iso3Set.has(iso3);
       });
 
-      if (visited.length === 0) return;
-      if (!map || !map.isStyleLoaded()) return;
-      if (map.getSource('visited-countries')) return;
+      console.log('[Country Highlights] Matched features:', visited.length);
+      if (visited.length === 0) { console.warn('[Country Highlights] No matching features'); return; }
+      if (!map) { console.warn('[Country Highlights] Map gone after fetch'); return; }
+      if (!map.isStyleLoaded()) { console.warn('[Country Highlights] Style not loaded yet'); return; }
+      if (map.getSource('visited-countries')) { console.warn('[Country Highlights] Source already exists, skipping'); return; }
 
       map.addSource('visited-countries', {
         type: 'geojson',
         data: { type: 'FeatureCollection', features: visited }
       });
 
-      // Insert country layers below route layers if possible
       var beforeLayer = map.getLayer('cruise-glow') ? 'cruise-glow' : undefined;
       map.addLayer({
         id: 'country-fill', type: 'fill', source: 'visited-countries',
@@ -600,8 +606,9 @@ function loadCountryHighlights(visitedCodes) {
         id: 'country-border', type: 'line', source: 'visited-countries',
         paint: { 'line-color': '#22d3ee', 'line-width': 1.2, 'line-opacity': 0.4 }
       }, beforeLayer);
+      console.log('[Country Highlights] SUCCESS - added layers for', visited.length, 'countries');
     })
-    .catch(function(err) { console.warn('Country highlights failed:', err); });
+    .catch(function(err) { console.warn('[Country Highlights] FAILED:', err); });
 }
 
 function setupInteractions() {
