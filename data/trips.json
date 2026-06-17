@@ -7606,6 +7606,29 @@
     "HomeAtEnd": "Myrtle Beach, SC",
     "Segments": [
       {
+        "SegmentType": "Flight",
+        "BookingNumber": "D7U5A9",
+        "Airline": "Virgin Atlantic / SAS",
+        "FlightNumber": "SK503",
+        "Source": "email",
+        "Departure": {
+          "LocationName": "Copenhagen Airport (Kastrup)",
+          "City": "Copenhagen",
+          "Province": null,
+          "CountryCode": "DK",
+          "Code": "CPH",
+          "Time": "2026-06-20T12:35:00+02:00"
+        },
+        "Arrival": {
+          "LocationName": "London Heathrow Airport",
+          "City": "London",
+          "Province": null,
+          "CountryCode": "GB",
+          "Code": "LHR",
+          "Time": "2026-06-20T13:35:00+01:00"
+        }
+      },
+      {
         "SegmentType": "Cruise",
         "BookingNumber": "8553297",
         "CruiseLine": "Royal Caribbean",
