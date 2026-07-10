@@ -5417,7 +5417,7 @@
       {
         "SegmentType": "Accommodation",
         "BookingNumber": null,
-        "DisplayName": "\u5ddd\u3069\u3053 \u3079\u3089\u307c\u3046",
+        "DisplayName": "川どこ べらぼう",
         "City": "Noshiro",
         "Province": "Akita",
         "PostalCode": "016-0813",
@@ -7219,7 +7219,7 @@
       {
         "SegmentType": "Accommodation",
         "BookingNumber": null,
-        "DisplayName": "\u5ddd\u3069\u3053 \u3079\u3089\u307c\u3046",
+        "DisplayName": "川どこ べらぼう",
         "City": "Noshiro",
         "Province": "Akita",
         "PostalCode": "016-0813",
@@ -7247,7 +7247,7 @@
       {
         "SegmentType": "Accommodation",
         "BookingNumber": null,
-        "DisplayName": "\u5ddd\u3069\u3053 \u3079\u3089\u307c\u3046",
+        "DisplayName": "川どこ べらぼう",
         "City": "Noshiro",
         "Province": "Akita",
         "PostalCode": "016-0813",
@@ -7608,8 +7608,8 @@
       {
         "SegmentType": "Flight",
         "BookingNumber": "D7U5A9",
-        "Airline": "Virgin Atlantic / SAS",
-        "FlightNumber": "SK503",
+        "Airline": "SAS (Virgin Atlantic)",
+        "FlightNumber": "SK 503",
         "Source": "email",
         "Departure": {
           "LocationName": "Copenhagen Airport (Kastrup)",
@@ -7633,17 +7633,17 @@
         "BookingNumber": "8553297",
         "CruiseLine": "Royal Caribbean",
         "Ship": "Liberty of the Seas",
-        "RoomType": "Spacious Ocean View Balcony (2B)",
+        "RoomType": "Spacious Balcony (2B)",
         "Stateroom": "8248",
         "DeparturePort": {
-          "PortName": "Port of Southampton",
+          "PortName": "Southampton",
           "City": "Southampton",
           "Province": null,
           "CountryCode": "GB",
           "Time": "2026-06-21T17:00:00+01:00"
         },
         "ArrivalPort": {
-          "PortName": "Port of Southampton",
+          "PortName": "Southampton",
           "City": "Southampton",
           "Province": null,
           "CountryCode": "GB",
@@ -7655,60 +7655,18 @@
             "City": "Hamburg",
             "Province": null,
             "CountryCode": "DE",
-            "Date": "2026-06-23",
-            "ArriveTime": "08:00",
-            "DepartTime": "20:00"
+            "Date": "2026-06-23"
           },
           {
-            "PortName": "Bruges (Zeebrugge)",
-            "City": "Zeebrugge",
+            "PortName": "Zeebrugge",
+            "City": "Bruges",
             "Province": null,
             "CountryCode": "BE",
-            "Date": "2026-06-25",
-            "ArriveTime": "08:00",
-            "DepartTime": "17:00"
+            "Date": "2026-06-25"
           }
         ],
-        "Source": "email"
-      }
-    ]
-  },
-  {
-    "TripId": "malta-june-2026",
-    "TripName": "Malta Trip",
-    "IsActiveTravel": true,
-    "HomeAtStart": "Myrtle Beach, SC",
-    "HomeAtEnd": "Myrtle Beach, SC",
-    "Segments": [
-      {
-        "SegmentType": "Flight",
-        "BookingNumber": "Y6YOOT",
-        "Airline": "British Airways",
-        "FlightNumber": "BA 2614",
-        "Source": "email",
-        "Departure": {
-          "LocationName": "London Gatwick Airport",
-          "City": "London",
-          "Province": null,
-          "CountryCode": "GB",
-          "Code": "LGW",
-          "Time": "2026-06-27T08:40:00+01:00"
-        },
-        "Arrival": {
-          "LocationName": "Malta International Airport",
-          "City": "Malta",
-          "Province": null,
-          "CountryCode": "MT",
-          "Code": "MLA",
-          "Time": "2026-06-27T13:00:00+02:00"
-        },
-        "CabinClass": "Economy Plus",
-        "OperatedBy": "BA Euroflyer",
-        "BaseFare": 200.0,
-        "TaxesAndFees": 64.5,
-        "TotalFare": 264.5,
-        "PaymentMethod": "Capital One Venture X Visa *3763",
-        "CapitalOneTravelRef": "H-Z-D14ZUGGOB"
+        "Source": "manual",
+        "Dining": "My Time"
       }
     ]
   },
@@ -7851,6 +7809,113 @@
         "Source": "email",
         "CruiseRate": "$948.00",
         "TotalCharges": "$1,308.00"
+      }
+    ]
+  },
+  {
+    "TripId": "malta-june-2026",
+    "TripName": "Malta Trip",
+    "IsActiveTravel": true,
+    "HomeAtStart": "Myrtle Beach, SC",
+    "HomeAtEnd": "Myrtle Beach, SC",
+    "Segments": [
+      {
+        "SegmentType": "Accommodation",
+        "BookingNumber": "H-KQTMV8XSGNBV",
+        "DisplayName": "Premier Inn London Gatwick South",
+        "City": "Crawley",
+        "Province": "West Sussex",
+        "PostalCode": null,
+        "CountryCode": "GB",
+        "Address1": "London Road, Lowfield Heath",
+        "Address2": null,
+        "CheckInDate": "2026-06-26",
+        "CheckOutDate": "2026-06-27",
+        "Source": "email"
+      },
+      {
+        "SegmentType": "Flight",
+        "BookingNumber": "Y6YOOT",
+        "Airline": "British Airways",
+        "FlightNumber": "BA 2614",
+        "Source": "email",
+        "Departure": {
+          "LocationName": "London Gatwick Airport",
+          "City": "London",
+          "Province": null,
+          "CountryCode": "GB",
+          "Code": "LGW",
+          "Time": "2026-06-27T08:40:00+01:00"
+        },
+        "Arrival": {
+          "LocationName": "Malta International Airport",
+          "City": "Malta",
+          "Province": null,
+          "CountryCode": "MT",
+          "Code": "MLA",
+          "Time": "2026-06-27T13:00:00+02:00"
+        },
+        "CabinClass": "Economy Plus",
+        "OperatedBy": "BA Euroflyer",
+        "BaseFare": 200.0,
+        "TaxesAndFees": 64.5,
+        "TotalFare": 264.5,
+        "PaymentMethod": "Capital One Venture X Visa *3763",
+        "CapitalOneTravelRef": "H-Z-D14ZUGGOB"
+      },
+      {
+        "SegmentType": "Accommodation",
+        "BookingNumber": "73483191205646",
+        "DisplayName": "The Preluna Hotel",
+        "City": "Sliema",
+        "Province": null,
+        "PostalCode": "SLM 1605",
+        "CountryCode": "MT",
+        "Address1": "124 Tower Road",
+        "Address2": null,
+        "CheckInDate": "2026-06-27",
+        "CheckOutDate": "2026-06-29",
+        "Source": "email",
+        "Price": 225.02,
+        "PaymentMethod": "AmericanExpress *1008"
+      },
+      {
+        "SegmentType": "Accommodation",
+        "BookingNumber": "B_55669152",
+        "DisplayName": "Vivaldi Malta",
+        "City": "St. Julian's",
+        "Province": null,
+        "PostalCode": null,
+        "CountryCode": "MT",
+        "Address1": "Dragonara Road, 46",
+        "Address2": null,
+        "CheckInDate": "2026-06-29",
+        "CheckOutDate": "2026-07-04",
+        "Source": "email",
+        "PaymentMethod": "Visa *3763"
+      },
+      {
+        "SegmentType": "Flight",
+        "BookingNumber": null,
+        "Airline": "KM Malta Airlines",
+        "FlightNumber": "KM 514",
+        "Source": "email",
+        "Departure": {
+          "LocationName": "Malta International Airport",
+          "City": "Malta",
+          "Province": null,
+          "CountryCode": "MT",
+          "Code": "MLA",
+          "Time": "2026-07-09T09:15:00+02:00"
+        },
+        "Arrival": {
+          "LocationName": "Vienna International Airport",
+          "City": "Vienna",
+          "Province": null,
+          "CountryCode": "AT",
+          "Code": "VIE",
+          "Time": "2026-07-09T11:35:00+02:00"
+        }
       }
     ]
   }
