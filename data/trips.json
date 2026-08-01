@@ -8356,6 +8356,30 @@
         }
       },
       {
+        "SegmentType": "Train",
+        "BookingNumber": null,
+        "Operator": "ZVV (Zürich Transport Network)",
+        "TrainNumber": null,
+        "SeatClass": "2nd Class",
+        "Source": "ticket",
+        "Departure": {
+          "LocationName": "Zürich, Central",
+          "City": "Zürich",
+          "Province": null,
+          "CountryCode": "CH",
+          "Time": "2026-08-01T17:42:00+02:00"
+        },
+        "Arrival": {
+          "LocationName": "Zürich, Kinkelstrasse",
+          "City": "Zürich",
+          "Province": null,
+          "CountryCode": "CH",
+          "Time": "2026-08-01T18:00:00+02:00"
+        },
+        "Price": "CHF 4.70",
+        "Note": "ZVV single ticket, Zone 110. Vollpreis (full fare)"
+      },
+      {
         "SegmentType": "Flight",
         "BookingNumber": "CMZNNB",
         "Airline": "Swiss International Air Lines",
