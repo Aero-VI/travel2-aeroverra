@@ -107,6 +107,18 @@ function initMap() {
     .then(function (s) {
       if (!s || !s.sources) throw new Error('bad style');
       s.glyphs = s.glyphs || FALLBACK_GLYPHS;
+      // CARTO's 2026-10 tiles draw ocean water on only some low-zoom tiles (gray boxes on a black sea).
+      // Paint water the same as the background so the sea is one even colour.
+      var bg = '#0e0e0e';
+      (s.layers || []).forEach(function (l) {
+        if (l.type === 'background' && l.paint && typeof l.paint['background-color'] === 'string') bg = l.paint['background-color'];
+      });
+      (s.layers || []).forEach(function (l) {
+        if (l.type === 'fill' && (l.id === 'water' || l['source-layer'] === 'water')) {
+          l.paint = l.paint || {};
+          l.paint['fill-color'] = bg;
+        }
+      });
       __styleCache = s;
       __resolvingStyle = false;
       __createMap(s);
@@ -628,7 +640,17 @@ function loadCountryHighlights(visitedCodes) {
       console.log('[Country Highlights] Matched features:', visited.length);
       if (visited.length === 0) { console.warn('[Country Highlights] No matching features'); return; }
       if (!map) { console.warn('[Country Highlights] Map gone after fetch'); return; }
-      if (!map.isStyleLoaded()) { console.warn('[Country Highlights] Style not loaded yet'); return; }
+      // the outlines can arrive before the style finishes loading: wait instead of skipping
+      if (!map.isStyleLoaded()) {
+        var retry = function () { if (map.isStyleLoaded()) { map.off('idle', retry); addVisited(visited); } };
+        map.on('idle', retry);
+        return;
+      }
+      addVisited(visited);
+    })
+    .catch(function(err) { console.warn('[Country Highlights] FAILED:', err); });
+
+  function addVisited(visited) {
       if (map.getSource('visited-countries')) { console.warn('[Country Highlights] Source already exists, skipping'); return; }
 
       map.addSource('visited-countries', {
@@ -646,8 +668,7 @@ function loadCountryHighlights(visitedCodes) {
         paint: { 'line-color': '#22d3ee', 'line-width': 1.2, 'line-opacity': 0.4 }
       }, beforeLayer);
       console.log('[Country Highlights] SUCCESS - added layers for', visited.length, 'countries');
-    })
-    .catch(function(err) { console.warn('[Country Highlights] FAILED:', err); });
+  }
 }
 
 function setupInteractions() {
